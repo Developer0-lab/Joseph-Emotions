@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { account, appwriteConfigured, appwriteConfig } from './lib/appwrite'
+import { account, appwriteConfigured, appwriteConfig, verifyStudioAdmin } from './lib/appwrite'
 import { emptyContent, loadSiteContent, saveSiteContent, uploadSiteMedia } from './lib/contentStore'
 import { ArrowLeft, Check, ImagePlus, LogOut, Music2, Plus, Save, Settings2, Upload, Video, X } from 'lucide-react'
 
@@ -22,7 +22,7 @@ export default function AdminStudio() {
 
   useEffect(() => {
     if (!appwriteConfigured) return
-    account.get().then(async current => {
+    verifyStudioAdmin().then(async current => {
       setUser(current)
       try { setContent(await loadSiteContent()) } catch (e) { setError(e.message) }
     }).catch(() => {})
@@ -46,7 +46,7 @@ export default function AdminStudio() {
     setBusy(true); setError('')
     try {
       const session = await account.createEmailPasswordSession(email.trim(), password)
-      const current = await account.get()
+      const current = await verifyStudioAdmin()
       setUser(current)
       setContent(await loadSiteContent())
       setPassword('')
@@ -80,7 +80,7 @@ export default function AdminStudio() {
     finally { setBusy(false) }
   }
 
-  if (!appwriteConfigured || !appwriteConfig.bucketId) return <div className="studio-gate"><div className="studio-login-card"><p className="studio-kicker">JOSEPH EMOTIONS / SETUP</p><h1>Connect the studio.</h1><p>The private studio is ready, but it needs your Appwrite project endpoint, project ID and Storage bucket ID before sign-in, uploads and permanent saving can work.</p><code>VITE_APPWRITE_ENDPOINT<br/>VITE_APPWRITE_PROJECT_ID<br/>VITE_APPWRITE_BUCKET_ID</code><p className="studio-hint">Add these values to your Appwrite Site environment variables, then redeploy. Keep the bucket's file read access public so the website can display published media. Do not share API keys here.</p><a href="https://cloud.appwrite.io/" target="_blank" rel="noreferrer">Open Appwrite Console ↗</a><a className="studio-back" href="/">← Back to website</a></div></div>
+  if (!appwriteConfigured || !appwriteConfig.bucketId || !appwriteConfig.adminTeamId) return <div className="studio-gate"><div className="studio-login-card"><p className="studio-kicker">JOSEPH EMOTIONS / SETUP</p><h1>Connect the studio.</h1><p>The private studio is ready, but it needs your Appwrite project endpoint, project ID, Storage bucket ID and administrator Team ID before sign-in, uploads and permanent saving can work.</p><code>VITE_APPWRITE_ENDPOINT<br/>VITE_APPWRITE_PROJECT_ID<br/>VITE_APPWRITE_BUCKET_ID<br/>VITE_APPWRITE_ADMIN_TEAM_ID</code><p className="studio-hint">Add these values to your Appwrite Site environment variables, then redeploy. Keep the bucket's file read access public so the website can display published media. Do not share API keys here.</p><a href="https://cloud.appwrite.io/" target="_blank" rel="noreferrer">Open Appwrite Console ↗</a><a className="studio-back" href="/">← Back to website</a></div></div>
 
   if (!user) return <div className="studio-gate"><form className="studio-login-card" onSubmit={login}><p className="studio-kicker">JOSEPH EMOTIONS / PRIVATE AREA</p><h1>Artist studio<span>.</span></h1><p>Sign in with the administrator account configured in Appwrite Authentication.</p><label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="username" required/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" required/></label>{error && <p className="studio-error">{error}</p>}<button className="studio-primary" disabled={busy}>{busy ? 'SIGNING IN…' : 'ENTER STUDIO ↗'}</button><a className="studio-back" href="/">← Back to website</a></form></div>
 
