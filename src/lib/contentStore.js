@@ -29,12 +29,14 @@ export async function saveSiteContent(content) {
   const user = await account.get()
   const file = new File([JSON.stringify(content, null, 2)], 'site-content.json', { type: 'application/json' })
   const permissions = [Permission.read(Role.any()), Permission.update(Role.team(appwriteConfig.adminTeamId)), Permission.delete(Role.team(appwriteConfig.adminTeamId))]
+  // Appwrite Storage.updateFile changes metadata (including the name); it does not
+  // replace file contents. Recreate this fixed-ID JSON file to publish new content.
   try {
-    await storage.updateFile(appwriteConfig.bucketId, CONTENT_FILE_ID, file, permissions)
+    await storage.deleteFile(appwriteConfig.bucketId, CONTENT_FILE_ID)
   } catch (error) {
     if (error.code !== 404) throw error
-    await storage.createFile(appwriteConfig.bucketId, CONTENT_FILE_ID, file, permissions)
   }
+  await storage.createFile(appwriteConfig.bucketId, CONTENT_FILE_ID, file, permissions)
 }
 
 export async function uploadSiteMedia(file, category = 'media') {
