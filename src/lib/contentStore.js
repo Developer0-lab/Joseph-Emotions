@@ -28,7 +28,7 @@ export async function saveSiteContent(content) {
   if (!appwriteConfigured || !appwriteConfig.bucketId) throw new Error('Appwrite project and storage bucket are not configured.')
   const user = await account.get()
   const file = new File([JSON.stringify(content, null, 2)], 'site-content.json', { type: 'application/json' })
-  const permissions = [Permission.read(Role.any()), Permission.update(Role.user(user.$id)), Permission.delete(Role.user(user.$id))]
+  const permissions = [Permission.read(Role.any()), Permission.update(Role.team(appwriteConfig.adminTeamId)), Permission.delete(Role.team(appwriteConfig.adminTeamId))]
   try {
     await storage.updateFile(appwriteConfig.bucketId, CONTENT_FILE_ID, file, permissions)
   } catch (error) {
