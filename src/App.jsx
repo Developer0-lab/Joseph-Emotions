@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { emptyContent, loadSiteContent } from './lib/contentStore'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Disc3, Instagram, Menu, Music2, Play, Plus, X, Youtube } from 'lucide-react'
 
 const photos = {
@@ -23,6 +24,13 @@ function App() {
   const [activePage, setActivePage] = useState('Home')
   const [playing, setPlaying] = useState(false)
   const [selectedRelease, setSelectedRelease] = useState(null)
+  const [siteContent, setSiteContent] = useState(emptyContent)
+  const activePhotos = { ...photos, hero: siteContent.hero?.image?.url || photos.hero, portrait: siteContent.profile?.portrait?.url || photos.portrait }
+  const activeReleases = siteContent.music?.length ? siteContent.music.map((item, index) => ({ number: String(index + 1).padStart(2, '0'), title: item.title, type: item.type || 'RELEASE', year: item.year || '', image: item.image?.url || photos.studio, description: item.description || '', url: item.url || '' })) : releases
+
+  useEffect(() => {
+    loadSiteContent().then(setSiteContent).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
@@ -66,7 +74,7 @@ function App() {
 
       {activePage === 'Home' ? (
         <main>
-          <section className="hero" style={{ '--hero-image': `url(${photos.hero})` }}>
+          <section className="hero" style={{ '--hero-image': `url(${activePhotos.hero})` }}>
             <div className="hero-grain"/>
             <div className="hero-topline"><span>INDEPENDENT ARTIST · OFFICIAL WEBSITE</span><span>KAMPALA / THE WORLD</span></div>
             <div className="hero-content">
@@ -86,16 +94,16 @@ function App() {
             <div className="intro-grid">
               <h2 className="editorial-heading reveal">A voice.<br/><em>A feeling.</em><br/>A world of its own.</h2>
               <div className="intro-copy reveal"><p className="gold-kicker">WELCOME TO MY WORLD</p><p>Some things are better felt than explained. Step into the world of Joseph Emotions — where sound, emotion and storytelling meet.</p><button className="text-link" onClick={() => navigate('About')}>DISCOVER THE ARTIST <ArrowUpRight size={15}/></button></div>
-              <div className="intro-image reveal"><img src={photos.portrait} alt="Artist portrait placeholder"/><span className="image-caption">THE PERSON BEHIND THE MUSIC</span></div>
+              <div className="intro-image reveal"><img src={activePhotos.portrait} alt="Artist portrait placeholder"/><span className="image-caption">THE PERSON BEHIND THE MUSIC</span></div>
             </div>
           </section>
 
           <section className="music-feature section-pad">
             <div className="section-top reveal"><div><p className="gold-kicker">SOUNDTRACKS TO THE MOMENT</p><h2 className="section-heading">The music<span>.</span></h2></div><button className="text-link" onClick={() => navigate('Music')}>ALL RELEASES <ArrowUpRight size={15}/></button></div>
-            <div className="release-grid">{releases.map((release, i) => <button className="release-card reveal" key={release.number} onClick={() => { setSelectedRelease(release); navigate('Music') }}><div className="release-art"><img src={release.image} alt=""/><span className="release-play"><Play size={18} fill="currentColor"/></span><span className="release-number">{release.number}</span></div><div className="release-meta"><span>{release.type} · {release.year}</span><ArrowUpRight size={15}/></div><h3>{release.title}</h3><p>{release.description}</p></button>)}</div>
+            <div className="release-grid">{activeReleases.map((release, i) => <button className="release-card reveal" key={release.number} onClick={() => { setSelectedRelease(release); setActivePage('Music'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}><div className="release-art"><img src={release.image} alt=""/><span className="release-play"><Play size={18} fill="currentColor"/></span><span className="release-number">{release.number}</span></div><div className="release-meta"><span>{release.type} · {release.year}</span><ArrowUpRight size={15}/></div><h3>{release.title}</h3><p>{release.description}</p></button>)}</div>
           </section>
 
-          <section className="statement-section" style={{ '--statement-image': `url(${photos.crowd})` }}>
+          <section className="statement-section" style={{ '--statement-image': `url(${activePhotos.crowd})` }}>
             <div className="statement-overlay"/>
             <div className="statement-content reveal"><p className="gold-kicker">MORE THAN MUSIC</p><h2>Feel every<br/><em>moment.</em></h2><p>Every note carries a story. Every story carries a feeling.</p><button className="outline-button" onClick={() => navigate('Videos')}>ENTER THE VISUAL WORLD <ArrowUpRight size={15}/></button></div>
           </section>
@@ -111,7 +119,7 @@ function App() {
           <section className="closing-cta"><p className="gold-kicker reveal">STAY CLOSE TO THE MUSIC</p><h2 className="reveal">The story continues<span>.</span></h2><button className="gold-button reveal" onClick={() => navigate('Connect')}>FOLLOW THE JOURNEY <ArrowUpRight size={15}/></button></section>
         </main>
       ) : (
-        <PageView page={activePage} navigate={navigate} playing={playing} setPlaying={setPlaying} selectedRelease={selectedRelease}/>
+        <PageView page={activePage} navigate={navigate} playing={playing} setPlaying={setPlaying} selectedRelease={selectedRelease} photos={activePhotos} releases={activeReleases} siteContent={siteContent}/>
       )}
 
       <footer className="site-footer">
@@ -124,7 +132,7 @@ function App() {
   )
 }
 
-function PageView({ page, navigate, playing, setPlaying }) {
+function PageView({ page, navigate, playing, setPlaying, photos, releases, siteContent }) {
   const [filter, setFilter] = useState('ALL')
   const pageData = {
     Music: ['THE SOUND', 'Music', 'Every release is a chapter.'],
