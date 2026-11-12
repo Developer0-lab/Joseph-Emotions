@@ -79,7 +79,7 @@ function App() {
             <div className="hero-topline"><span>INDEPENDENT ARTIST · OFFICIAL WEBSITE</span><span>KAMPALA / THE WORLD</span></div>
             <div className="hero-content">
               <p className="eyebrow reveal">{siteContent.hero?.eyebrow || "THE ARTIST. THE MUSIC. THE JOURNEY."}</p>
-              <h1 className="hero-title reveal"><span>{(siteContent.hero?.title || "JOSEPH EMOTIONS.").split(" ").slice(0,-1).join(" ") || "JOSEPH"}</span><span>{(siteContent.hero?.title || "JOSEPH EMOTIONS.").split(" ").slice(-1)[0].replace(/\\.$/,"")}<span className="gold-period">.</span></span></h1>
+              <h1 className="hero-title reveal"><span>{(siteContent.hero?.title || "JOSEPH EMOTIONS.").split(" ").slice(0,-1).join(" ") || "JOSEPH"}</span><span>{(siteContent.hero?.title || "JOSEPH EMOTIONS.").split(" ").slice(-1)[0].replace(/\.$/,"")}<span className="gold-period">.</span></span></h1>
               <div className="hero-bottom reveal">
                 <p>{siteContent.hero?.subtitle || "Music that moves you. Stories that stay with you."}</p>
                 <button className="round-play" onClick={() => navigate('Music')} aria-label="Explore music"><ArrowUpRight size={22}/></button>
