@@ -45,7 +45,22 @@ export default function AdminStudio() {
     event.preventDefault()
     setBusy(true); setError('')
     try {
-      const session = await account.createEmailPasswordSession(email.trim(), password)
+      // Reuse an existing Appwrite session instead of attempting to create a duplicate.
+      let activeAccount = null
+      try { activeAccount = await account.get() } catch { /* No active session: sign in below. */ }
+      if (activeAccount) {
+        try {
+          const current = await verifyStudioAdmin()
+          setUser(current)
+          setContent(await loadSiteContent())
+          setPassword('')
+          return
+        } catch (sessionError) {
+          // A non-admin active session is cleared by verifyStudioAdmin; allow the admin to sign in.
+          if (!/not authorized/i.test(sessionError.message || '')) throw sessionError
+        }
+      }
+      await account.createEmailPasswordSession(email.trim(), password)
       const current = await verifyStudioAdmin()
       setUser(current)
       setContent(await loadSiteContent())
