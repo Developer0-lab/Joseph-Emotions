@@ -13,6 +13,12 @@ function App() {
   const [siteContent, setSiteContent] = useState(emptyContent)
   const heroImages = siteContent.hero?.images?.length ? siteContent.hero.images : (siteContent.hero?.image ? [siteContent.hero.image] : [])
   const activeReleases = (siteContent.music || []).map((item, index) => ({ number: String(index + 1).padStart(2, '0'), title: item.title, type: item.type || 'RELEASE', year: item.year || '', image: item.image?.url || '', description: item.description || '', url: item.url || '', audio: item.audio || null }))
+  const videoThumbnails = (siteContent.videos || []).map(item => item.image?.url).filter(Boolean)
+  const galleryImages = (siteContent.gallery || []).map(item => item.image?.url).filter(Boolean)
+  const journalItems = [
+    ...(siteContent.updates || []).filter(item => item.image?.url).map(item => ({ ...item, source: 'update' })),
+    ...(siteContent.gallery || []).filter(item => item.image?.url).map(item => ({ ...item, source: 'gallery', year: item.category || 'FROM THE GALLERY' }))
+  ]
 
   useEffect(() => {
     loadSiteContent().then(setSiteContent).catch(error => console.error('Could not load published website content:', error))
@@ -96,17 +102,25 @@ function App() {
             <div className="release-grid">{activeReleases.length ? activeReleases.map((release, i) => <button className="release-card reveal" key={release.number} onClick={() => { setSelectedRelease(release); setActivePage('Music'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}><div className="release-art"><img src={release.image} alt=""/><span className="release-play"><Play size={18} fill="currentColor"/></span><span className="release-number">{release.number}</span></div><div className="release-meta"><span>{release.type} · {release.year}</span><ArrowUpRight size={15}/></div><h3>{release.title}</h3><p>{release.description}</p></button>) : <p className="empty-content-note">Music releases will appear here after they are added in Artist Studio.</p>}</div>
           </section>
 
-          <section className="statement-section" >
+          <section className="statement-section" style={videoThumbnails[0] ? { backgroundImage: `url("${videoThumbnails[0]}")` } : undefined}>
             <div className="statement-overlay"/>
             <div className="statement-content reveal"><p className="gold-kicker">MORE THAN MUSIC</p><h2>Feel every<br/><em>moment.</em></h2><p>Every note carries a story. Every story carries a feeling.</p><button className="outline-button" onClick={() => navigate('Videos')}>ENTER THE VISUAL WORLD <ArrowUpRight size={15}/></button></div>
           </section>
 
           <section className="journal-section section-pad">
             <div className="section-top reveal"><div><p className="gold-kicker">NOTES FROM THE JOURNEY</p><h2 className="section-heading">The journal<span>.</span></h2></div><button className="text-link" onClick={() => navigate('Updates')}>ALL UPDATES <ArrowUpRight size={15}/></button></div>
-            {siteContent.updates?.length ? <div className="journal-grid"><button className="journal-feature reveal" onClick={() => navigate('Updates')}><img src={siteContent.updates[0].image?.url} alt={siteContent.updates[0].title || 'Artist update'}/><div><span>{siteContent.updates[0].year || 'JOSEPH EMOTIONS'}</span><h3>{siteContent.updates[0].title}</h3><p>{siteContent.updates[0].description}</p></div></button><div className="journal-side">{siteContent.updates.slice(1,3).map((item,index)=><button className="journal-small reveal" key={item.id || index} onClick={() => navigate('Updates')}><img src={item.image?.url} alt={item.title || 'Artist update'}/><span>{item.title || 'LATEST UPDATE'} <ArrowUpRight size={14}/></span></button>)}{siteContent.updates.length===1 && <button className="journal-small reveal" onClick={() => navigate('Gallery')}><span>IN THE STUDIO <ArrowUpRight size={14}/></span></button>}</div></div> : <div className="journal-grid"><button className="journal-feature reveal" onClick={() => navigate('Updates')}><img src={undefined} alt="Live music atmosphere"/><div><span>THE JOURNEY · 2026</span><h3>Every chapter has a sound.</h3><p>Behind the music, beyond the moment.</p></div></button><div className="journal-side"><button className="journal-small reveal" onClick={() => navigate('Gallery')}><img src={undefined} alt="Recording studio"/><span>IN THE STUDIO <ArrowUpRight size={14}/></span></button><button className="journal-small reveal" onClick={() => navigate('Videos')}><span>BEHIND THE VISUALS <ArrowUpRight size={14}/></span></button></div></div>}
+            {journalItems.length ? <div className="journal-grid">
+              <button className="journal-feature reveal" onClick={() => navigate(journalItems[0].source === 'gallery' ? 'Gallery' : 'Updates')}>
+                <img src={journalItems[0].image.url} alt={journalItems[0].title || 'A moment from the journey'}/>
+                <div><span>{journalItems[0].year || (journalItems[0].source === 'gallery' ? 'FROM THE GALLERY' : 'JOSEPH EMOTIONS')}</span><h3>{journalItems[0].title || 'A moment from the journey'}</h3><p>{journalItems[0].description || 'A glimpse into the journey of Joseph Emotions.'}</p></div>
+              </button>
+              <div className="journal-side">{journalItems.slice(1,3).map((item,index)=><button className="journal-small reveal" key={item.id || index} onClick={() => navigate(item.source === 'gallery' ? 'Gallery' : 'Updates')}><img src={item.image.url} alt={item.title || 'A moment from the journey'}/><span>{item.title || (item.source === 'gallery' ? 'FROM THE GALLERY' : 'LATEST UPDATE')} <ArrowUpRight size={14}/></span></button>)}
+                {journalItems.length === 1 && <button className="journal-small reveal" onClick={() => navigate('Gallery')}><span>EXPLORE THE GALLERY <ArrowUpRight size={14}/></span></button>}
+              </div>
+            </div> : <p className="empty-content-note">Updates and gallery photographs will appear here when published in Artist Studio.</p>}
           </section>
 
-          <section className="closing-cta"><p className="gold-kicker reveal">STAY CLOSE TO THE MUSIC</p><h2 className="reveal">The story continues<span>.</span></h2><button className="gold-button reveal" onClick={() => navigate('Connect')}>FOLLOW THE JOURNEY <ArrowUpRight size={15}/></button></section>
+          <section className="closing-cta" style={galleryImages.length ? { backgroundImage: `url("${galleryImages[galleryImages.length - 1]}")` } : undefined}><p className="gold-kicker reveal">STAY CLOSE TO THE MUSIC</p><h2 className="reveal">The story continues<span>.</span></h2><button className="gold-button reveal" onClick={() => navigate('Connect')}>FOLLOW THE JOURNEY <ArrowUpRight size={15}/></button></section>
         </main>
       ) : (
         <PageView page={activePage} navigate={navigate} playing={playing} setPlaying={setPlaying} selectedRelease={selectedRelease} releases={activeReleases} siteContent={siteContent}/>
