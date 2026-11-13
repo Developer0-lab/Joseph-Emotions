@@ -26,3 +26,8 @@
 .footer-credit a{color:var(--soft-gold);text-decoration:none;transition:color .25s ease}
 .footer-credit a:hover{color:#fff}
 @media(max-width:720px){.footer-credit{width:100%;text-align:right;order:4;margin-top:4px}.footer-bottom{column-gap:14px;row-gap:8px}}
+
+
+/* Homepage image sources: videos power the visual statement; gallery powers the closing story section. */
+.closing-cta{position:relative;isolation:isolate;background-size:cover;background-position:center}
+.closing-cta::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(5,5,5,.88),rgba(5,5,5,.58)),linear-gradient(0deg,rgba(5,5,5,.5),rgba(5,5,5,.5))}
