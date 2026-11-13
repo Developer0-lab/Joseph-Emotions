@@ -16,7 +16,11 @@ export const emptyContent = {
 export async function loadSiteContent() {
   if (!appwriteConfigured || !appwriteConfig.bucketId) throw new Error('Appwrite project and storage bucket are not configured.')
   const url = storage.getFileDownload(appwriteConfig.bucketId, CONTENT_FILE_ID)
-  const response = await fetch(url)
+  // Appwrite's fixed file ID keeps the same URL after replacement. Add a unique
+  // query value and disable browser caching so public pages never show old content.
+  const freshUrl = new URL(url.toString())
+  freshUrl.searchParams.set('published', String(Date.now()))
+  const response = await fetch(freshUrl.toString(), { cache: 'no-store' })
   if (!response.ok) {
     if (response.status === 404) return emptyContent
     throw new Error('Could not load saved website content.')
