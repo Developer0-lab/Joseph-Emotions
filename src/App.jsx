@@ -24,13 +24,22 @@ function App() {
   const [activePage, setActivePage] = useState('Home')
   const [playing, setPlaying] = useState(false)
   const [selectedRelease, setSelectedRelease] = useState(null)
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0)
   const [siteContent, setSiteContent] = useState(emptyContent)
-  const activePhotos = { ...photos, hero: siteContent.hero?.image?.url || photos.hero, portrait: siteContent.profile?.portrait?.url || photos.portrait }
+  const heroImages = siteContent.hero?.images?.length ? siteContent.hero.images : (siteContent.hero?.image ? [siteContent.hero.image] : [])
+  const currentHeroImage = heroImages.length ? heroImages[activeHeroIndex % heroImages.length] : null
+  const activePhotos = { ...photos, hero: currentHeroImage?.url || currentHeroImage || photos.hero, portrait: siteContent.profile?.portrait?.url || photos.portrait }
   const activeReleases = siteContent.music?.length ? siteContent.music.map((item, index) => ({ number: String(index + 1).padStart(2, '0'), title: item.title, type: item.type || 'RELEASE', year: item.year || '', image: item.image?.url || photos.studio, description: item.description || '', url: item.url || '', audio: item.audio || null })) : releases
 
   useEffect(() => {
     loadSiteContent().then(setSiteContent).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (heroImages.length < 2) return
+    const timer = window.setInterval(() => setActiveHeroIndex(index => (index + 1) % heroImages.length), 6500)
+    return () => window.clearInterval(timer)
+  }, [heroImages.length])
 
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
@@ -86,7 +95,7 @@ function App() {
                 <button className="hero-cta" onClick={() => navigate('Music')}>EXPLORE THE MUSIC <ArrowUpRight size={15}/></button>
               </div>
             </div>
-            <div className="hero-footer"><span>SCROLL TO DISCOVER</span><span className="scroll-line"><i/></span><span>01 — 06</span></div>
+            <div className="hero-footer"><span>SCROLL TO DISCOVER</span><span className="scroll-line"><i/></span><span>01 — 06</span>{heroImages.length > 1 && <div className="hero-image-dots" aria-label="Homepage hero images">{heroImages.map((image,index)=><button key={image.id||image.url||index} type="button" className={index===activeHeroIndex%heroImages.length?"active":""} aria-label={"Show hero image "+(index+1)} onClick={()=>setActiveHeroIndex(index)}/>)}</div>}</div>
           </section>
 
           <section className="intro-section section-pad">
@@ -110,10 +119,7 @@ function App() {
 
           <section className="journal-section section-pad">
             <div className="section-top reveal"><div><p className="gold-kicker">NOTES FROM THE JOURNEY</p><h2 className="section-heading">The journal<span>.</span></h2></div><button className="text-link" onClick={() => navigate('Updates')}>ALL UPDATES <ArrowUpRight size={15}/></button></div>
-            <div className="journal-grid">
-              <button className="journal-feature reveal" onClick={() => navigate('Updates')}><img src={photos.stage} alt="Live music atmosphere"/><div><span>THE JOURNEY · 2026</span><h3>Every chapter has a sound.</h3><p>Behind the music, beyond the moment.</p></div></button>
-              <div className="journal-side"><button className="journal-small reveal" onClick={() => navigate('Gallery')}><img src={photos.studio} alt="Recording studio"/><span>IN THE STUDIO <ArrowUpRight size={14}/></span></button><button className="journal-small reveal" onClick={() => navigate('Videos')}><img src={photos.mic} alt="Microphone"/><span>BEHIND THE VISUALS <ArrowUpRight size={14}/></span></button></div>
-            </div>
+            {siteContent.updates?.length ? <div className="journal-grid"><button className="journal-feature reveal" onClick={() => navigate('Updates')}><img src={siteContent.updates[0].image?.url || photos.stage} alt={siteContent.updates[0].title || 'Artist update'}/><div><span>{siteContent.updates[0].year || 'JOSEPH EMOTIONS'}</span><h3>{siteContent.updates[0].title}</h3><p>{siteContent.updates[0].description}</p></div></button><div className="journal-side">{siteContent.updates.slice(1,3).map((item,index)=><button className="journal-small reveal" key={item.id || index} onClick={() => navigate('Updates')}><img src={item.image?.url || photos.stage} alt={item.title || 'Artist update'}/><span>{item.title || 'LATEST UPDATE'} <ArrowUpRight size={14}/></span></button>)}{siteContent.updates.length===1 && <button className="journal-small reveal" onClick={() => navigate('Gallery')}><img src={photos.studio} alt="Recording studio"/><span>IN THE STUDIO <ArrowUpRight size={14}/></span></button>}</div></div> : <div className="journal-grid"><button className="journal-feature reveal" onClick={() => navigate('Updates')}><img src={photos.stage} alt="Live music atmosphere"/><div><span>THE JOURNEY · 2026</span><h3>Every chapter has a sound.</h3><p>Behind the music, beyond the moment.</p></div></button><div className="journal-side"><button className="journal-small reveal" onClick={() => navigate('Gallery')}><img src={photos.studio} alt="Recording studio"/><span>IN THE STUDIO <ArrowUpRight size={14}/></span></button><button className="journal-small reveal" onClick={() => navigate('Videos')}><img src={photos.mic} alt="Microphone"/><span>BEHIND THE VISUALS <ArrowUpRight size={14}/></span></button></div></div>}
           </section>
 
           <section className="closing-cta"><p className="gold-kicker reveal">STAY CLOSE TO THE MUSIC</p><h2 className="reveal">The story continues<span>.</span></h2><button className="gold-button reveal" onClick={() => navigate('Connect')}>FOLLOW THE JOURNEY <ArrowUpRight size={15}/></button></section>
