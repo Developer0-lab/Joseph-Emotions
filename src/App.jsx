@@ -41,7 +41,7 @@ function App() {
     }, { threshold: 0.12 })
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
     return () => observer.disconnect()
-  }, [activePage])
+  }, [activePage, siteContent])
 
   const navigate = page => {
     setActivePage(page)
