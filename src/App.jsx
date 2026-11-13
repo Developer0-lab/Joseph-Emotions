@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { emptyContent, loadSiteContent } from './lib/contentStore'
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Disc3, Instagram, Menu, Music2, Play, Plus, X, Youtube } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Disc3, Menu, Music2, Play, Plus, X } from 'lucide-react'
 
 const navItems = ['Home', 'Music', 'Videos', 'Gallery', 'Updates', 'About']
 
@@ -113,7 +113,7 @@ function App() {
       )}
 
       <footer className="site-footer">
-        <div className="footer-main"><div><button className="footer-wordmark" onClick={() => navigate('Home')}>JOSEPH<br/><span>EMOTIONS.</span></button><p>Music that moves you.<br/>Stories that stay with you.</p></div><div className="footer-nav"><span className="gold-kicker">EXPLORE</span>{navItems.map(item => <button key={item} onClick={() => navigate(item)}>{item}</button>)}</div><div className="footer-social"><span className="gold-kicker">FOLLOW THE JOURNEY</span><button aria-label="Instagram"><Instagram size={17}/></button><button aria-label="YouTube"><Youtube size={17}/></button><button aria-label="Spotify"><Disc3 size={17}/></button></div></div>
+        <div className="footer-main"><div><button className="footer-wordmark" onClick={() => navigate('Home')}>JOSEPH<br/><span>EMOTIONS.</span></button><p>Music that moves you.<br/>Stories that stay with you.</p></div><div className="footer-nav"><span className="gold-kicker">EXPLORE</span>{navItems.map(item => <button key={item} onClick={() => navigate(item)}>{item}</button>)}</div><div className="footer-social"><span className="gold-kicker">FOLLOW THE JOURNEY</span><div className="social-icon-row">{[{ name: 'YouTube', url: siteContent.socials?.youtube, icon: 'https://cdn.simpleicons.org/youtube/FF0033' }, { name: 'TikTok', url: siteContent.socials?.tiktok, icon: 'https://cdn.simpleicons.org/tiktok/FFFFFF' }, { name: 'Spotify', url: siteContent.socials?.spotify, icon: 'https://cdn.simpleicons.org/spotify/1ED760' }].map((social, index) => <a key={social.name} className={`social-icon-tile social-float-${index + 1}`} href={social.url || `https://www.${social.name.toLowerCase()}.com`} target="_blank" rel="noreferrer" aria-label={`Joseph Emotions on ${social.name}`} title={social.name}><img src={social.icon} alt="" /></a>)}</div></div></div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} JOSEPH EMOTIONS. ALL RIGHTS RESERVED.</span><span>MADE OF MUSIC & EMOTION.</span><a className="footer-studio-access" href="/studio" aria-label="Open Artist Studio" title="Artist Studio">···</a><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>BACK TO TOP ↑</button></div>
       </footer>
 
