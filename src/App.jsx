@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { emptyContent, loadSiteContent } from './lib/contentStore'
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Disc3, Menu, Music2, Play, Plus, X } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Bell, Disc3, Menu, Music2, Play, Plus, X } from 'lucide-react'
 
-const navItems = ['Home', 'Music', 'Videos', 'Gallery', 'Updates', 'About']
+const navItems = ['Home', 'Music', 'Videos', 'Gallery', 'About']
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -11,15 +11,26 @@ function App() {
   const [selectedRelease, setSelectedRelease] = useState(null)
   const [activeHeroIndex, setActiveHeroIndex] = useState(0)
   const [siteContent, setSiteContent] = useState(emptyContent)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [readNotificationIds, setReadNotificationIds] = useState(() => {
+    try { return JSON.parse(window.localStorage.getItem('joseph-emotions-read-notifications') || '[]') } catch { return [] }
+  })
+  const announcements = siteContent.updates || []
+  const latestAnnouncement = announcements.filter(item => item.image?.url).slice(-1)[0]
+  const unreadNotifications = announcements.filter(item => !readNotificationIds.includes(item.id))
+  const markNotificationsRead = () => {
+    const ids = announcements.map(item => item.id)
+    setReadNotificationIds(ids)
+    try { window.localStorage.setItem('joseph-emotions-read-notifications', JSON.stringify(ids)) } catch { /* Storage may be unavailable. */ }
+  }
+  const toggleNotifications = () => {
+    if (!notificationsOpen) markNotificationsRead()
+    setNotificationsOpen(open => !open)
+  }
   const heroImages = siteContent.hero?.images?.length ? siteContent.hero.images : (siteContent.hero?.image ? [siteContent.hero.image] : [])
   const activeReleases = (siteContent.music || []).map((item, index) => ({ number: String(index + 1).padStart(2, '0'), title: item.title, type: item.type || 'RELEASE', year: item.year || '', image: item.image?.url || '', description: item.description || '', url: item.url || '', audio: item.audio || null }))
   const videoThumbnails = (siteContent.videos || []).map(item => item.image?.url).filter(Boolean)
   const galleryImages = (siteContent.gallery || []).map(item => item.image?.url).filter(Boolean)
-  const journalItems = [
-    ...(siteContent.updates || []).filter(item => item.image?.url).map(item => ({ ...item, source: 'update' })),
-    ...(siteContent.gallery || []).filter(item => item.image?.url).map(item => ({ ...item, source: 'gallery', year: item.category || 'FROM THE GALLERY' }))
-  ]
-
   useEffect(() => {
     loadSiteContent().then(setSiteContent).catch(error => console.error('Could not load published website content:', error))
   }, [])
@@ -61,9 +72,34 @@ function App() {
         <nav className="desktop-nav" aria-label="Main navigation">
           {navItems.map(item => <button key={item} className={activePage === item ? 'nav-link active' : 'nav-link'} onClick={() => navigate(item)}>{item}</button>)}
         </nav>
-        <button className="header-connect" onClick={() => navigate('Connect')}>LET'S CONNECT <ArrowUpRight size={14}/></button>
+        <div className="header-actions">
+          <button className="notification-trigger" type="button" onClick={toggleNotifications} aria-label={`Notifications${unreadNotifications.length ? `, ${unreadNotifications.length} unread` : ''}`} aria-expanded={notificationsOpen}>
+            <Bell size={19}/>{unreadNotifications.length > 0 && <span className="notification-unread-dot" aria-label="Unread notifications"/>}
+          </button>
+          <button className="header-connect" onClick={() => navigate('Connect')}>LET'S CONNECT <ArrowUpRight size={14}/></button>
+        </div>
         <button className="mobile-menu-button" onClick={() => setMenuOpen(v => !v)} aria-label={menuOpen ? 'Close menu' : 'Open menu'}>{menuOpen ? <X/> : <Menu/>}</button>
       </header>
+
+      {notificationsOpen && <div className="notification-backdrop" onClick={() => setNotificationsOpen(false)}>
+        <aside className="notification-panel" onClick={event => event.stopPropagation()} aria-label="Notifications">
+          <div className="notification-panel-heading"><div><p className="gold-kicker">STAY IN THE LOOP</p><h2>Notifications<span>.</span></h2></div><button type="button" onClick={() => setNotificationsOpen(false)} aria-label="Close notifications"><X size={19}/></button></div>
+          <div className="notification-panel-list">
+            {announcements.length ? [...announcements].reverse().map((item,index) => <article className="notification-entry" key={item.id || index}>
+              {item.image?.url && <img src={item.image.url} alt={item.title || 'Joseph Emotions announcement'}/>}
+              <div><p className="gold-kicker">{item.year || 'JOSEPH EMOTIONS'}</p><h3>{item.title || 'A new announcement'}</h3>{item.description && <p>{item.description}</p>}</div>
+            </article>) : <p className="notification-empty">There are no announcements yet. Check back soon.</p>}
+          </div>
+          <p className="notification-read-note">YOU'RE ALL CAUGHT UP</p>
+        </aside>
+      </div>}
+
+      {activePage === 'Home' && latestAnnouncement && <section className="announcement-banner" aria-label="Latest announcement">
+        <img src={latestAnnouncement.image.url} alt={latestAnnouncement.title || 'Joseph Emotions announcement'}/>
+        <div className="announcement-overlay"/>
+        <div className="announcement-content"><span className="gold-kicker">LATEST FROM JOSEPH EMOTIONS</span><h2>{latestAnnouncement.title || 'A new announcement'}<span>.</span></h2>{latestAnnouncement.description && <p>{latestAnnouncement.description}</p>}<button type="button" onClick={() => { if (!notificationsOpen) markNotificationsRead(); setNotificationsOpen(true) }}>VIEW NOTIFICATIONS <ArrowUpRight size={15}/></button></div>
+        <span className="announcement-label">LATEST ANNOUNCEMENT</span>
+      </section>}
 
       {menuOpen && <div className="mobile-menu">
         {navItems.map(item => <button key={item} onClick={() => navigate(item)}>{item}<ArrowUpRight size={16}/></button>)}
@@ -107,19 +143,6 @@ function App() {
             <div className="statement-content reveal"><p className="gold-kicker">MORE THAN MUSIC</p><h2>Feel every<br/><em>moment.</em></h2><p>Every note carries a story. Every story carries a feeling.</p><button className="outline-button" onClick={() => navigate('Videos')}>ENTER THE VISUAL WORLD <ArrowUpRight size={15}/></button></div>
           </section>
 
-          <section className="journal-section section-pad">
-            <div className="section-top reveal"><div><p className="gold-kicker">NOTES FROM THE JOURNEY</p><h2 className="section-heading">The journal<span>.</span></h2></div><button className="text-link" onClick={() => navigate('Updates')}>ALL UPDATES <ArrowUpRight size={15}/></button></div>
-            {journalItems.length ? <div className="journal-grid">
-              <button className="journal-feature reveal" onClick={() => navigate(journalItems[0].source === 'gallery' ? 'Gallery' : 'Updates')}>
-                <img src={journalItems[0].image.url} alt={journalItems[0].title || 'A moment from the journey'}/>
-                <div><span>{journalItems[0].year || (journalItems[0].source === 'gallery' ? 'FROM THE GALLERY' : 'JOSEPH EMOTIONS')}</span><h3>{journalItems[0].title || 'A moment from the journey'}</h3><p>{journalItems[0].description || 'A glimpse into the journey of Joseph Emotions.'}</p></div>
-              </button>
-              <div className="journal-side">{journalItems.slice(1,3).map((item,index)=><button className="journal-small reveal" key={item.id || index} onClick={() => navigate(item.source === 'gallery' ? 'Gallery' : 'Updates')}><img src={item.image.url} alt={item.title || 'A moment from the journey'}/><span>{item.title || (item.source === 'gallery' ? 'FROM THE GALLERY' : 'LATEST UPDATE')} <ArrowUpRight size={14}/></span></button>)}
-                {journalItems.length === 1 && <button className="journal-small reveal" onClick={() => navigate('Gallery')}><span>EXPLORE THE GALLERY <ArrowUpRight size={14}/></span></button>}
-              </div>
-            </div> : <p className="empty-content-note">Updates and gallery photographs will appear here when published in Artist Studio.</p>}
-          </section>
-
           <section className="closing-cta" style={galleryImages.length ? { backgroundImage: `url("${galleryImages[galleryImages.length - 1]}")` } : undefined}><p className="gold-kicker reveal">STAY CLOSE TO THE MUSIC</p><h2 className="reveal">The story continues<span>.</span></h2><button className="gold-button reveal" onClick={() => navigate('Connect')}>FOLLOW THE JOURNEY <ArrowUpRight size={15}/></button></section>
         </main>
       ) : (
@@ -142,7 +165,6 @@ function PageView({ page, navigate, playing, setPlaying, photos, releases, siteC
     Music: ['THE SOUND', 'Music', 'Every release is a chapter.'],
     Videos: ['THE VISUALS', 'Videos', 'See the feeling. Hear the story.'],
     Gallery: ['BEHIND THE MOMENTS', 'Gallery', 'A collection of moments along the way.'],
-    Updates: ['THE JOURNAL', 'Updates', 'News, notes and moments from the journey.'],
     About: ['THE PERSON. THE PURPOSE.', 'About', 'The story behind Joseph Emotions.'],
     Connect: ['KEEP IN TOUCH', 'Connect', 'Follow the journey. Be part of the story.']
   }
