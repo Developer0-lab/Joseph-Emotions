@@ -12,11 +12,15 @@ function App() {
   const [activeHeroIndex, setActiveHeroIndex] = useState(0)
   const [siteContent, setSiteContent] = useState(emptyContent)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [selectedNotificationImage, setSelectedNotificationImage] = useState(null)
+  const [dismissedBannerId, setDismissedBannerId] = useState(() => { try { return window.localStorage.getItem('joseph-emotions-dismissed-banner') || '' } catch { return '' } })
   const [readNotificationIds, setReadNotificationIds] = useState(() => {
     try { return JSON.parse(window.localStorage.getItem('joseph-emotions-read-notifications') || '[]') } catch { return [] }
   })
   const announcements = siteContent.updates || []
   const latestAnnouncement = announcements.filter(item => item.image?.url).slice(-1)[0]
+  const showAnnouncementBanner = latestAnnouncement && dismissedBannerId !== String(latestAnnouncement.id || latestAnnouncement.image.url)
+  const dismissAnnouncementBanner = () => { const id = String(latestAnnouncement?.id || latestAnnouncement?.image?.url || ''); setDismissedBannerId(id); try { window.localStorage.setItem('joseph-emotions-dismissed-banner', id) } catch { /* Storage may be unavailable. */ } }
   const unreadNotifications = announcements.filter(item => !readNotificationIds.includes(item.id))
   const markNotificationsRead = () => {
     const ids = announcements.map(item => item.id)
@@ -86,7 +90,7 @@ function App() {
           <div className="notification-panel-heading"><div><p className="gold-kicker">STAY IN THE LOOP</p><h2>Notifications<span>.</span></h2></div><button type="button" onClick={() => setNotificationsOpen(false)} aria-label="Close notifications"><X size={19}/></button></div>
           <div className="notification-panel-list">
             {announcements.length ? [...announcements].reverse().map((item,index) => <article className="notification-entry" key={item.id || index}>
-              {item.image?.url && <img src={item.image.url} alt={item.title || 'Joseph Emotions announcement'}/>}
+              {item.image?.url && <button className="notification-image-button" type="button" onClick={() => setSelectedNotificationImage({ url: item.image.url, alt: item.title || 'Joseph Emotions announcement' })} aria-label={'View ' + (item.title || 'announcement image') + ' fullscreen'}><img src={item.image.url} alt={item.title || 'Joseph Emotions announcement'}/><span>VIEW IMAGE</span></button>}
               <div><p className="gold-kicker">{item.year || 'JOSEPH EMOTIONS'}</p><h3>{item.title || 'A new announcement'}</h3>{item.description && <p>{item.description}</p>}</div>
             </article>) : <p className="notification-empty">There are no announcements yet. Check back soon.</p>}
           </div>
@@ -94,11 +98,12 @@ function App() {
         </aside>
       </div>}
 
-      {activePage === 'Home' && latestAnnouncement && <section className="announcement-banner" aria-label="Latest announcement">
+      {activePage === 'Home' && showAnnouncementBanner && <section className="announcement-banner" aria-label="Latest announcement">
         <img src={latestAnnouncement.image.url} alt={latestAnnouncement.title || 'Joseph Emotions announcement'}/>
         <div className="announcement-overlay"/>
         <div className="announcement-content"><span className="gold-kicker">LATEST FROM JOSEPH EMOTIONS</span><h2>{latestAnnouncement.title || 'A new announcement'}<span>.</span></h2>{latestAnnouncement.description && <p>{latestAnnouncement.description}</p>}<button type="button" onClick={() => { if (!notificationsOpen) markNotificationsRead(); setNotificationsOpen(true) }}>VIEW NOTIFICATIONS <ArrowUpRight size={15}/></button></div>
         <span className="announcement-label">LATEST ANNOUNCEMENT</span>
+        <button className="announcement-dismiss" type="button" onClick={dismissAnnouncementBanner} aria-label="Dismiss announcement banner"><X size={19}/></button>
       </section>}
 
       {menuOpen && <div className="mobile-menu">
@@ -154,6 +159,7 @@ function App() {
         <div className="footer-bottom"><span>© {new Date().getFullYear()} JOSEPH EMOTIONS. ALL RIGHTS RESERVED.</span><span>MADE OF MUSIC & EMOTION.</span><span className="footer-credit">CREATED BY <a href="https://www.facebook.com/muddu.aldrine" target="_blank" rel="noreferrer">MUDDU ALDRINE</a></span><a className="footer-studio-access" href="/studio" aria-label="Open Artist Studio" title="Artist Studio">···</a><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>BACK TO TOP ↑</button></div>
       </footer>
 
+      {selectedNotificationImage && <div className="notification-image-lightbox" role="dialog" aria-modal="true" aria-label="Announcement image fullscreen" onClick={() => setSelectedNotificationImage(null)}><button type="button" className="notification-lightbox-close" onClick={() => setSelectedNotificationImage(null)} aria-label="Close fullscreen image"><X size={23}/></button><img src={selectedNotificationImage.url} alt={selectedNotificationImage.alt} onClick={event => event.stopPropagation()}/></div>}
       {selectedRelease && <div className="release-modal" onClick={() => setSelectedRelease(null)}><div className="release-modal-card" onClick={e => e.stopPropagation()}><button className="modal-close" onClick={() => setSelectedRelease(null)}><X/></button><img src={selectedRelease.image} alt=""/><p className="gold-kicker">{selectedRelease.type} · {selectedRelease.year}</p><h2>{selectedRelease.title}</h2><p>{selectedRelease.description}</p><span className="modal-note">Release information and listening links will be managed in the artist studio.</span></div></div>}
     </div>
   )
