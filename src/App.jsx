@@ -114,7 +114,7 @@ function App() {
       {activePage === 'Home' ? (
         <main>
           <section className="hero" data-hero-count={heroImages.length}>
-            <div className="hero-slides" aria-hidden="true">{heroImages.map((image,index)=><div key={image.id || image.url || index} className={"hero-slide " + (index === activeHeroIndex ? "is-current" : index === (activeHeroIndex - 1 + heroImages.length) % heroImages.length ? "was-current" : "is-next")}><img src={image.url || image} alt="" /></div>)}</div>
+            <div className="hero-slides" aria-hidden="true">{heroImages.map((image,index)=><div key={image.id || image.url || index} className={"hero-slide " + (index === activeHeroIndex ? "is-current" : index === (activeHeroIndex + 1) % heroImages.length ? "is-next" : index === (activeHeroIndex - 1 + heroImages.length) % heroImages.length ? "was-current" : "is-hidden")}><img src={image.url || image} alt="" /></div>)}</div>
             <div className="hero-grain"/>
             <div className="hero-topline"><span>INDEPENDENT ARTIST · OFFICIAL WEBSITE</span><span>KAMPALA / THE WORLD</span></div>
             <div className="hero-content">
